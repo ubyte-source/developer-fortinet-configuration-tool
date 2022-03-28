@@ -17,8 +17,6 @@ So the basic setup looks something like this:
 library:
 - [fortinet.sh](https://github.com/energia-source/developer-fortinet-configuration-tool)
 
-<br>
-
 ## Built With
 
 * [BASH](https://www.gnu.org/software/bash/) - BASH
