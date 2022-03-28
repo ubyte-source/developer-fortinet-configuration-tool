@@ -51,7 +51,7 @@ SetBGP() {
   local regex=$(printf '10000')
   cat $1 | grep -oE ${regex} | while read id; do
     ((newbgp = id + 64 / ID))
-    sed -i -E "s|(\b)($id)(\b)|\1${newbgp}\-${1}\3|i" $1
+    sed -i -E "s|(\b)($id)(\b)|\1${newbgp}\3|i" $1
     break
   done
 
