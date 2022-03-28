@@ -64,7 +64,7 @@ Fortigate40F() {
 
   cat $2 | grep -oE ${regex} | while read ip; do
     toint=$(ip2dec $ip $1)
-    [[ $toint =~ 181700296|181700306|167772160 ]] && continue
+    [[ $toint =~ 181700296|181700306|167772160|176422915 ]] && continue
     [[ ${array[*]} == *"$toint"* ]] && continue
     array+=($toint)
 
