@@ -99,7 +99,7 @@ F40="${TEMPORARY}/40F.conf"
 FVM="${TEMPORARY}/FVM.conf"
 
 cp ./template/F40.conf $F40
-cp ./template/FVM.CLOUD.conf $FVM
+cp ./template/FVM.conf $FVM
 
 SYMBOLS=("." "-")
 for s in "${SYMBOLS[@]}"; do
