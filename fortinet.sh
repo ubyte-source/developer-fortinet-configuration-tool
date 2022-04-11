@@ -24,7 +24,7 @@ dec2ip() {
   for e in {3..0}; do
     ((octet = dec / (256 ** e)))
     ((dec -= octet * 256 ** e))
-    [[ $delimiter == $(echo -e "\x2D") ]] && octet=$(printf "%03d" $octet)
+    [[ $2 == $(echo -e "\x2D") ]] && octet=$(printf "%03d" $octet)
     ip+=$delimiter$octet
     delimiter=$2
   done
@@ -59,7 +59,7 @@ SetStatic() {
 }
 
 Fortigate40F() {
-  local regex=$(printf '(10\%s(([0-9]{1,3}|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\%s){2}([0-9]{1,3}|1[0-9][0-9]|2([0-4][0-9]|5[0-5])))' $1 $1)
+  local regex=$(printf '((010|10)\%s(([0-9]{1,3}|1[0-9][0-9]|2([0-4][0-9]|5[0-5]))\%s){2}([0-9]{1,3}|1[0-9][0-9]|2([0-4][0-9]|5[0-5])))' $1 $1)
   local array=()
 
   cat $2 | grep -oE ${regex} | while read ip; do
