@@ -98,7 +98,7 @@ TEMPORARY=$(mktemp -d)
 F40="${TEMPORARY}/40F.conf"
 FVM="${TEMPORARY}/FVM.conf"
 
-cp ./template/F40.conf $F40
+cp ./template/40F.conf $F40
 cp ./template/FVM.conf $FVM
 
 SYMBOLS=("." "-")
@@ -118,7 +118,6 @@ ZIP=$(mktemp)
 ZIP="$ZIP.zip"
 zip -qqj ${ZIP} ${F40} ${FVM}
 
-cat ${FVM}
 cat ${ZIP}
 
 exit 0
