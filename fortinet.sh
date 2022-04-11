@@ -47,11 +47,11 @@ ip2dec() {
   return 0
 }
 
-SetBGP() {
+SetStatic() {
   local regex=$(printf '10000')
   cat $1 | grep -oE ${regex} | while read id; do
-    ((newbgp = id + 64 / ID))
-    sed -i -E "s|(\b)($id)(\b)|\1${newbgp}\3|i" $1
+    ((newstatic = id + 64))
+    sed -i -E "s|(\b)($id)(\b)|\1${newstatic}\3|i" $1
     break
   done
 
@@ -104,19 +104,21 @@ cp ./template/FVM.conf $FVM
 SYMBOLS=("." "-")
 for s in "${SYMBOLS[@]}"; do
   Fortigate40F $s $F40
+  Fortigate40F $s $FVM
 done
 
-INTERTFACES=("A" "WAN")
+INTERTFACES=("A" "W")
 for i in "${INTERTFACES[@]}"; do
   FortigateVM $i $FVM
 done
 
-SetBGP $F40
-SetBGP $FVM
+SetStatic $FVM
 
 ZIP=$(mktemp)
 ZIP="$ZIP.zip"
 zip -qqj ${ZIP} ${F40} ${FVM}
+
+cat ${FVM}
 cat ${ZIP}
 
 exit 0
