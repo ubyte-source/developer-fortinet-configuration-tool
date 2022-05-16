@@ -6,6 +6,8 @@ while getopts i: options; do
   esac
 done
 
+((ID = ID * 64))
+
 declare -a RESPONSE=()
 
 if ! [ -v ID ]; then
@@ -50,7 +52,7 @@ ip2dec() {
 SetStatic() {
   cat $1 | grep -oE 10000 | while read id; do
     ((newstatic = id + ID))
-    sed -i -E "s|(\b)($id)(\b)|\1${newstatic}\3|i" $1
+    sed -i -E "s|(\b)($id)(\b)|\1${newstatic}\3|ig" $1
     break
   done
 
@@ -80,13 +82,12 @@ Fortigate() {
     replace=$(dec2ip $toint $1)
 
     [[ $ip =~ ${named} ]] && replace=${replace:4}
-    sed -i -E "s|(\b)($ip)(\b)|\1${replace}\3|i" $2
+    sed -i -E "s|(\b)($ip)(\b)|\1${replace}\3|ig" $2
 
   done
 
   return 0
 }
-
 
 TEMPORARY=$(mktemp -d)
 F40="${TEMPORARY}/40F.conf"
