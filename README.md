@@ -8,7 +8,9 @@ So the basic setup looks something like this:
 
 ```bash
 
-./fortinet.sh -i 64 > conf.zip
+./fortinet.sh -e <account@energia-europa.com> -p <password> -m <MAC-address> -s <serial-number> > output.zip
+
+// optional you use -d parameter for duplicate existing configuration by ID es. -d 77
 
 ```
 

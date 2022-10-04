@@ -1,17 +1,34 @@
 #!/bin/bash
 
-while getopts i: options; do
+! [ -v JQ ] && export JQ=/usr/bin/jq
+! [ -v CURL ] && export CURL=/usr/bin/curl
+
+while getopts e:p:m:s:d: options; do
   case ${options} in
-  i) ID=${OPTARG} ;;
+  e) CAMELOT_EMAIL=${OPTARG} ;;
+  p) CAMELOT_PASSWORD=${OPTARG} ;;
+  m) FORTIGATE_MAC_ADDRESS=${OPTARG} ;;
+  s) FORTIGATE_SERIAL_NUMBER=${OPTARG} ;;
+  d) DETAIL=${OPTARG} ;;
   esac
 done
 
-((ID = ID * 64))
-
 declare -a RESPONSE=()
 
-if ! [ -v ID ]; then
-  RESPONSE+=("-i: Specifies the ID connectivity device.")
+if ! [ -v CAMELOT_EMAIL ]; then
+  RESPONSE+=("-e: Specifies the camelot credential e-mail.")
+fi
+
+if ! [ -v CAMELOT_PASSWORD ]; then
+  RESPONSE+=("-p: Specifies the camelot credential password.")
+fi
+
+if ! [ -v FORTIGATE_MAC_ADDRESS ]; then
+  RESPONSE+=("-m: Specifies the MAC address of Fortigate device.")
+fi
+
+if ! [ -v FORTIGATE_SERIAL_NUMBER ]; then
+  RESPONSE+=("-s: Specifies the serial-numebr of Fortigate device.")
 fi
 
 if [ ${#RESPONSE[@]} -ne 0 ]; then
@@ -20,6 +37,9 @@ if [ ${#RESPONSE[@]} -ne 0 ]; then
 fi
 
 unset RESPONSE
+
+URI="https://engine.energia-europa.com/api/machine/connectivity"
+[[ -v DETAIL ]] && URI="${URI}/detail/${DETAIL}" || URI="${URI}/create"
 
 dec2ip() {
   local ip dec=$1
@@ -49,10 +69,22 @@ ip2dec() {
   return 0
 }
 
+Create() {
+  local authorization=$($CURL -k -X POST -F "email=$CAMELOT_EMAIL" -F "password=$CAMELOT_PASSWORD" https://login.energia-europa.com/api/iam/user/login | $JQ -r .authorization)
+  local request=$($CURL -k -H "x-authorization: $authorization"  -F "connectivity_mac=$FORTIGATE_MAC_ADDRESS" -F "connectivity_serial=$FORTIGATE_SERIAL_NUMBER" ${URI})
+  local request_status=$($JQ -rc .status <<< "$request")
+  if [ $request_status = true ]; then
+    local created=$($JQ -rc .data <<< "$request")
+    $JQ -rc .data <<< "$request"
+  fi
+
+  return 0
+}
+
 SetStatic() {
-  cat $1 | grep -oE 10000 | while read id; do
-    ((newstatic = id + ID))
-    sed -i -E "s|(\b)($id)(\b)|\1${newstatic}\3|ig" $1
+  cat $2 | grep -oE 10000 | while read id; do
+    ((newstatic = id + $1))
+    sed -i -E "s|(\b)($id)(\b)|\1${newstatic}\3|ig" $2
     break
   done
 
@@ -70,15 +102,15 @@ Fortigate() {
       toint="92-$ip"
       toint=$(ip2dec $toint $1)
     else
-      ! [[ $ip =~ ^10 ]] && continue;
+      ! [[ $ip =~ ^0?10 ]] && continue;
       toint=$(ip2dec $ip $1)
     fi
 
-    [[ $toint =~ 181700296|181700306|167772160|176422915 ]] && continue
+    [[ $toint =~ 181700296|181700306|167772160|176422915|180944897 ]] && continue
     [[ ${array[*]} == *"$toint"* ]] && continue
     array+=($toint)
 
-    ((toint = toint + ID))
+    ((toint = toint + $3))
     replace=$(dec2ip $toint $1)
 
     [[ $ip =~ ${named} ]] && replace=${replace:4}
@@ -89,25 +121,35 @@ Fortigate() {
   return 0
 }
 
-TEMPORARY=$(mktemp -d)
-F40="${TEMPORARY}/40F.conf"
-FVM="${TEMPORARY}/FVM.conf"
+create=$(Create)
+if [[ $create ]]; then
 
-cp ./template/40F.conf $F40
-cp ./template/FVM.conf $FVM
+  TEMPORARY=$(mktemp -d)
+  F40="${TEMPORARY}/40F.conf"
+  FVM="${TEMPORARY}/FVM.conf"
 
-SYMBOLS=("." "-")
-for s in "${SYMBOLS[@]}"; do
-  Fortigate $s $F40
-  Fortigate $s $FVM
-done
+  cp ./template/40F.conf $F40
+  cp ./template/FVM.conf $FVM
 
-SetStatic $FVM
+  id=$(echo "$create" | $JQ -r .id_connectivity)
 
-ZIP=$(mktemp)
-ZIP="$ZIP.zip"
-zip -qqj ${ZIP} ${F40} ${FVM}
+  ((id = id - 1))
+  ((id = id * 64))
 
-cat ${ZIP}
+  SYMBOLS=("." "-")
+  for s in "${SYMBOLS[@]}"; do
+    Fortigate $s $F40 $id
+    Fortigate $s $FVM $id
+  done
+
+  SetStatic $id $FVM
+
+  ZIP=$(mktemp)
+  ZIP="$ZIP.zip"
+  zip -qqj ${ZIP} ${F40} ${FVM}
+
+  cat ${ZIP}
+
+fi
 
 exit 0
