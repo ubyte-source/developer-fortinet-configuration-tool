@@ -15,23 +15,23 @@ done
 
 declare -a RESPONSE=()
 
-if ! [ -v CAMELOT_EMAIL ]; then
+if ! [ -v CAMELOT_EMAIL ] ; then
   RESPONSE+=("-e: Specifies the camelot credential e-mail.")
 fi
 
-if ! [ -v CAMELOT_PASSWORD ]; then
+if ! [ -v CAMELOT_PASSWORD ] ; then
   RESPONSE+=("-p: Specifies the camelot credential password.")
 fi
 
-if ! [ -v FORTIGATE_MAC_ADDRESS ]; then
+if ! [ -v FORTIGATE_MAC_ADDRESS ] ; then
   RESPONSE+=("-m: Specifies the MAC address of Fortigate device.")
 fi
 
-if ! [ -v FORTIGATE_SERIAL_NUMBER ]; then
+if ! [ -v FORTIGATE_SERIAL_NUMBER ] ; then
   RESPONSE+=("-s: Specifies the serial-numebr of Fortigate device.")
 fi
 
-if [ ${#RESPONSE[@]} -ne 0 ]; then
+if [ ${#RESPONSE[@]} -ne 0 ] ; then
   printf '%s\n' "${RESPONSE[@]}"
   exit 1
 fi
@@ -73,7 +73,7 @@ Create() {
   local authorization=$($CURL -k -X POST -F "email=$CAMELOT_EMAIL" -F "password=$CAMELOT_PASSWORD" https://login.energia-europa.com/api/iam/user/login | $JQ -r .authorization)
   local request=$($CURL -k -H "x-authorization: $authorization"  -F "connectivity_mac=$FORTIGATE_MAC_ADDRESS" -F "connectivity_serial=$FORTIGATE_SERIAL_NUMBER" ${URI})
   local request_status=$($JQ -rc .status <<< "$request")
-  if [ $request_status = true ]; then
+  if [ $request_status = true ] ; then
     local created=$($JQ -rc .data <<< "$request")
     $JQ -rc .data <<< "$request"
   fi
@@ -98,7 +98,7 @@ Fortigate() {
 
   cat $2 | grep -oE ${regex} | while read ip; do
 
-    if [[ $ip =~ ${named} ]]; then
+    if [[ $ip =~ ${named} ]] ; then
       toint="92-$ip"
       toint=$(ip2dec $toint $1)
     else
@@ -122,7 +122,7 @@ Fortigate() {
 }
 
 create=$(Create)
-if [[ $create ]]; then
+if [[ $create ]] ; then
 
   TEMPORARY=$(mktemp -d)
   F40="${TEMPORARY}/40F.conf"
